@@ -45,6 +45,7 @@ class RTLeaner(object):
             return ['leaf', d[0, -1], 'NA', 'NA']
         if np.all(d[:, -1] == d[0, -1], axis=0):
             return ['leaf', d[0, -1], 'NA', 'NA']
+
         else:
             # shaping the tree
             # randomly select feature i
@@ -59,7 +60,7 @@ class RTLeaner(object):
             randrow2 = random.randint(0, datarow - 1)
             print("ensure not same value")
 
-            # ensure random rows generated are not of the same value
+            # SAME ROW CHECK ensure random rows generated are not of the same value
             while np.all(d[randrow1, randcol] == d[randrow2, randcol], axis=0):
                 randrow1 = random.randint(0, datarow - 1)
                 randrow2 = random.randint(0, datarow - 1)
@@ -68,11 +69,21 @@ class RTLeaner(object):
             print(randrow2)
             print(np.all(d[randrow1, randcol] == d[randrow2, randcol], axis=0))
             print("ensured")
+
             # converting splitval from ndarray to integer
             splitval = (d[randrow1, randcol] + d[randrow2, randcol]) / 2
             # print ("splitval: ", splitval[0])
             print splitval
 
+            # LEAF SIZE CRITERIA CHECK ensure leaf size check and tree is built according to given leaf size
+            if d.shape[0] <= leafsize:
+                if leafsize > 1:
+                    arr = d[:, -1]
+                    meanVal = arr.mean()
+                    return ['leaf', meanVal, 'NA', 'NA']
+                return ['leaf', d[0, -1], 'NA', 'NA']
+
+            # TIE CHECK
             # if there is a case where data cannot split due to ties, then find two other random values
             # try this up to 10 times
             i = 0
@@ -81,13 +92,12 @@ class RTLeaner(object):
                 randrow1 = random.randint(0, datarow - 1)
                 randrow2 = random.randint(0, datarow - 1)
 
-            # if still unsplittable then try a different factor
+            # if still unsplittable then create a leaf
             if len(d) == len(d[d[:, randcol] <= splitval]):
-                randcol = random.randint(0, datacol - 2)
-
-            # ensure leaf size check and tree is built according to given leaf size
-            if d[d[:, randcol] <= splitval].shape[0] <= leafsize or d[d[:, randcol] > splitval].shape[0] <= leafsize:
-                return ['leaf', d[0, -1], 'NA', 'NA']
+                #randcol = random.randint(0, datacol - 2)
+                arr = d[:, -1]
+                meanVal = arr.mean()
+                return ['leaf', meanVal, 'NA', 'NA']
 
             leftTree = self.build_tree(d[d[:, randcol] <= splitval])
             rightTree = self.build_tree(d[d[:, randcol] > splitval])
