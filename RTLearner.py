@@ -35,6 +35,7 @@ class RTLeaner(object):
         btree = self.build_tree(data)
         print "---- PRINT BTREE ------"
         print btree
+        print "---- COMPLETED PRINTING B-TREE ----"
         return "done"
 
     def build_tree(self, d):
@@ -80,8 +81,12 @@ class RTLeaner(object):
                 if leafsize > 1:
                     arr = d[:, -1]
                     meanVal = arr.mean()
-                    return ['leaf', meanVal, 'NA', 'NA']
-                return ['leaf', d[0, -1], 'NA', 'NA']
+                    leafList = ['leaf', meanVal, 'NA', 'NA']
+                    node.append(leafList)
+                    return leafList
+                leafList =['leaf', d[0, -1], 'NA', 'NA']
+                node.append(leafList)
+                return leafList
 
             # TIE CHECK
             # if there is a case where data cannot split due to ties, then find two other random values
@@ -97,18 +102,23 @@ class RTLeaner(object):
                 #randcol = random.randint(0, datacol - 2)
                 arr = d[:, -1]
                 meanVal = arr.mean()
-                return ['leaf', meanVal, 'NA', 'NA']
+                leafList = ['leaf', meanVal, 'NA', 'NA']
+                node.append(leafList)
+                return leafList
 
-            leftTree = self.build_tree(d[d[:, randcol] <= splitval])
-            rightTree = self.build_tree(d[d[:, randcol] > splitval])
+            leftTreeList = d[d[:, randcol] <= splitval]
+            rightTreeList = d[d[:, randcol] > splitval]
+            leafList = [randcol, splitval, 1, len(leftTreeList) + 1]
+            node.append(leafList)
+            leftTree = self.build_tree(leftTreeList)
             rightTreeIndex = len(leftTree) + 1
+            rightTree = self.build_tree(rightTreeList)
             root = [randcol, splitval, 1, rightTreeIndex]
             print root
             print leftTree
             print rightTree
-            branch = root + leftTree + rightTree
-            n = node.append(branch)
-            return n
+            node.append(root)
+            return node
 
     def query(self, dataX):
         ypred = []
@@ -122,12 +132,11 @@ class RTLeaner(object):
         global btree
         currNode = btree[r]
         print currNode
-        return 1
-        '''
-        if currNode[0][0] == 'leaf':
+
+        if currNode[0] == 'leaf':
             return currNode[1]
-        compFactor = currNode[0][0]
-        if d[compFactor] <= currNode[0][1]:
+        compFactor = currNode[0]
+        if d[compFactor] <= currNode[1]:
             print(currNode[2])
             r += int(currNode[2])
 
@@ -136,4 +145,3 @@ class RTLeaner(object):
         if d[compFactor] > currNode[1]:
             r += int(currNode[3])
             self.traverse_tree(d, r)
-        '''
